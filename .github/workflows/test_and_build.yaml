@@ -17,13 +17,6 @@ jobs:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
 
-    # Tests mock the DB and Cognito, so nothing real is contacted.
-    env:
-      DATABASE_URL: postgres://ci:ci@localhost:5432/ci
-      API_BASE_URL: http://localhost:3000
-      COGNITO_USER_POOL_ID: us-east-1_cicicicic
-      INVOICES_BUCKET: ci-invoices-bucket
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4

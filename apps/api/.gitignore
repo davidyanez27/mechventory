@@ -2,3 +2,5 @@ node_modules
 dist
 lambda.zip
 .env
+# Committed test env (fake values); re-included past the root's `.env.*` rule.
+!.env.test
