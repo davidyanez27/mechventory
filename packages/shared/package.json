@@ -1,0 +1,24 @@
+{
+  "name": "@serveless/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./auth": "./auth/index.ts",
+    "./user": "./user/index.ts",
+    "./company": "./company/index.ts",
+    "./common": "./common/index.ts",
+    "./product": "./product/index.ts",
+    "./customer": "./customer/index.ts",
+    "./invoice": "./invoice/index.ts"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

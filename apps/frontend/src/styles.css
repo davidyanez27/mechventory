@@ -1,0 +1,443 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap")
+layer(base);
+
+/* Auth design-system fonts: Inter (UI) + JetBrains Mono (numeric/technical) */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap")
+layer(base);
+
+@import "tailwindcss";
+
+/* Class-based dark mode: applies to .dark itself AND all its descendants */
+@custom-variant dark (&:is(.dark, .dark *));
+
+@theme {
+  /* ─── Semantic tokens — light mode (minimal monochrome) ────────────────── */
+  --color-background:             #ffffff;
+  --color-foreground:             #000000;
+  --color-border:                 #eaeaea;
+  --color-input:                  #eaeaea;
+  --color-ring:                   #000000;
+
+  --color-muted:                  #fafafa;
+  --color-muted-foreground:       #666666;
+
+  --color-accent:                 #f5f5f5;
+  --color-accent-foreground:      #000000;
+
+  --color-primary:                #000000;
+  --color-primary-foreground:     #ffffff;
+
+  --color-secondary:              #fafafa;
+  --color-secondary-foreground:   #000000;
+
+  --color-card:                   #ffffff;
+  --color-card-foreground:        #000000;
+
+  --color-popover:                #ffffff;
+  --color-popover-foreground:     #000000;
+
+  --color-destructive:            #e5484d;
+  --color-destructive-foreground: #ffffff;
+
+  /* ─── Neutral accents (kept names, repointed to grayscale) ───────────────── */
+  --color-calcite-beige:    #f5f5f5;
+  --color-calcite-blue:     #000000;
+  --color-calcite-blue-dark:#000000;
+  --color-calcite-dark:     #000000;
+  --color-calcite-charcoal: #171717;
+  --color-calcite-mid:      #2e2e2e;
+  --color-calcite-gray:     #666666;
+  --color-calcite-light:    #ffffff;
+
+  /* ─── Typography ─────────────────────────────────────────────────────────── */
+  --font-*: initial;
+  --font-sans: "Geist", sans-serif;
+
+  /* ─── Mechventory auth design system (shared by /login + /signup) ─────────── */
+  /* Fixed, theme-independent tokens so the dark screens stay pixel-exact.       */
+  --color-mv-bg:        #000000;
+  --color-mv-surface:   #0a0a0a;
+  --color-mv-surface-2: #0c0c0c;
+  --color-mv-line:      #1c1c1c;
+  --color-mv-line-2:    #2e2e2e;
+  --color-mv-fg:        #ededed;
+  --color-mv-muted:     #8f8f8f;
+  --color-mv-muted-2:   #5a5a5a;
+
+  --radius-mv:      7px;
+  --radius-mv-card: 12px;
+
+  --font-mv-ui:   "Inter", system-ui, -apple-system, sans-serif;
+  --font-mv-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* ─── Breakpoints ────────────────────────────────────────────────────────── */
+  --breakpoint-*: initial;
+  --breakpoint-2xsm: 375px;
+  --breakpoint-xsm: 425px;
+  --breakpoint-3xl: 2000px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* ─── Text sizes ─────────────────────────────────────────────────────────── */
+  --text-title-2xl: 72px;
+  --text-title-2xl--line-height: 90px;
+  --text-title-xl: 60px;
+  --text-title-xl--line-height: 72px;
+  --text-title-lg: 48px;
+  --text-title-lg--line-height: 60px;
+  --text-title-md: 36px;
+  --text-title-md--line-height: 44px;
+  --text-title-sm: 30px;
+  --text-title-sm--line-height: 38px;
+  --text-theme-xl: 20px;
+  --text-theme-xl--line-height: 30px;
+  --text-theme-sm: 14px;
+  --text-theme-sm--line-height: 20px;
+  --text-theme-xs: 12px;
+  --text-theme-xs--line-height: 18px;
+
+  /* ─── Base colors ────────────────────────────────────────────────────────── */
+  --color-current: currentColor;
+  --color-transparent: transparent;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* Monochrome "brand" ramp — light → near-black; 500 is the primary accent */
+  --color-brand-25: #fbfbfb;
+  --color-brand-50: #f5f5f5;
+  --color-brand-100: #ededed;
+  --color-brand-200: #e0e0e0;
+  --color-brand-300: #999999;
+  --color-brand-400: #5a5a5a;
+  --color-brand-500: #171717;
+  --color-brand-600: #000000;
+  --color-brand-700: #000000;
+  --color-brand-800: #000000;
+  --color-brand-900: #000000;
+  --color-brand-950: #0a0a0a;
+
+  --color-blue-light-25: #f5fbff;
+  --color-blue-light-50: #f0f9ff;
+  --color-blue-light-100: #e0f2fe;
+  --color-blue-light-200: #b9e6fe;
+  --color-blue-light-300: #7cd4fd;
+  --color-blue-light-400: #36bffa;
+  --color-blue-light-500: #0ba5ec;
+  --color-blue-light-600: #0086c9;
+  --color-blue-light-700: #026aa2;
+  --color-blue-light-800: #065986;
+  --color-blue-light-900: #0b4a6f;
+  --color-blue-light-950: #062c41;
+
+  --color-gray-25: #fcfcfc;
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f5f5f5;
+  --color-gray-200: #ebebeb;
+  --color-gray-300: #e0e0e0;
+  --color-gray-400: #a1a1a1;
+  --color-gray-500: #737373;
+  --color-gray-600: #525252;
+  --color-gray-700: #404040;
+  --color-gray-800: #262626;
+  --color-gray-900: #171717;
+  --color-gray-950: #0a0a0a;
+  --color-gray-dark: #111111;
+
+  --color-orange-25: #fffaf5;
+  --color-orange-50: #fff6ed;
+  --color-orange-100: #ffead5;
+  --color-orange-200: #fddcab;
+  --color-orange-300: #feb273;
+  --color-orange-400: #fd853a;
+  --color-orange-500: #fb6514;
+  --color-orange-600: #ec4a0a;
+  --color-orange-700: #c4320a;
+  --color-orange-800: #9c2a10;
+  --color-orange-900: #7e2410;
+  --color-orange-950: #511c10;
+
+  --color-success-25: #f6fef9;
+  --color-success-50: #ecfdf3;
+  --color-success-100: #d1fadf;
+  --color-success-200: #a6f4c5;
+  --color-success-300: #6ce9a6;
+  --color-success-400: #32d583;
+  --color-success-500: #12b76a;
+  --color-success-600: #039855;
+  --color-success-700: #027a48;
+  --color-success-800: #05603a;
+  --color-success-900: #054f31;
+  --color-success-950: #053321;
+
+  --color-error-25: #fffbfa;
+  --color-error-50: #fef3f2;
+  --color-error-100: #fee4e2;
+  --color-error-200: #fecdca;
+  --color-error-300: #fda29b;
+  --color-error-400: #f97066;
+  --color-error-500: #f04438;
+  --color-error-600: #d92d20;
+  --color-error-700: #b42318;
+  --color-error-800: #912018;
+  --color-error-900: #7a271a;
+  --color-error-950: #55160c;
+
+  --color-warning-25: #fffcf5;
+  --color-warning-50: #fffaeb;
+  --color-warning-100: #fef0c7;
+  --color-warning-200: #fedf89;
+  --color-warning-300: #fec84b;
+  --color-warning-400: #fdb022;
+  --color-warning-500: #f79009;
+  --color-warning-600: #dc6803;
+  --color-warning-700: #b54708;
+  --color-warning-800: #93370d;
+  --color-warning-900: #7a2e0e;
+  --color-warning-950: #4e1d09;
+
+  --color-theme-pink-500: #ee46bc;
+  --color-theme-purple-500: #7a5af8;
+
+  /* ─── Shadows ─────────────────────────────────────────────────────────────── */
+  --shadow-theme-md: 0px 4px 8px -2px rgba(41, 41, 41, 0.1),
+    0px 2px 4px -2px rgba(41, 41, 41, 0.06);
+  --shadow-theme-lg: 0px 12px 16px -4px rgba(41, 41, 41, 0.08),
+    0px 4px 6px -2px rgba(41, 41, 41, 0.03);
+  --shadow-theme-sm: 0px 1px 3px 0px rgba(41, 41, 41, 0.1),
+    0px 1px 2px 0px rgba(41, 41, 41, 0.06);
+  --shadow-theme-xs: 0px 1px 2px 0px rgba(41, 41, 41, 0.05);
+  --shadow-theme-xl: 0px 20px 24px -4px rgba(41, 41, 41, 0.08),
+    0px 8px 8px -4px rgba(41, 41, 41, 0.03);
+  --shadow-datepicker: -5px 0 0 #171717, 5px 0 0 #171717;
+  --shadow-focus-ring: 0px 0px 0px 4px rgba(0, 0, 0, 0.12);
+  --shadow-slider-navigation: 0px 1px 2px 0px rgba(41, 41, 41, 0.1),
+    0px 1px 3px 0px rgba(41, 41, 41, 0.1);
+  --shadow-tooltip: 0px 4px 6px -2px rgba(41, 41, 41, 0.05),
+    -8px 0px 20px 8px rgba(41, 41, 41, 0.05);
+
+  --drop-shadow-4xl: 0 35px 35px rgba(0, 0, 0, 0.25),
+    0 45px 65px rgba(0, 0, 0, 0.15);
+
+  /* ─── Z-index ─────────────────────────────────────────────────────────────── */
+  --z-index-1: 1;
+  --z-index-9: 9;
+  --z-index-99: 99;
+  --z-index-999: 999;
+  --z-index-9999: 9999;
+  --z-index-99999: 99999;
+  --z-index-999999: 999999;
+}
+
+/* ─── Dark mode overrides ────────────────────────────────────────────────────
+   MUST be outside any @layer so these non-layered rules beat the non-layered
+   :root{} output produced by @theme above (same cascade level, later in file
+   → wins when .dark is on <html>).
+   ─────────────────────────────────────────────────────────────────────────── */
+.dark {
+  --color-background:             #000000;
+  --color-foreground:             #ffffff;
+  --color-border:                 #2a2a2a;
+  --color-input:                  #2a2a2a;
+  --color-ring:                   #ffffff;
+
+  --color-muted:                  #111111;
+  --color-muted-foreground:       #888888;
+
+  --color-accent:                 #1a1a1a;
+  --color-accent-foreground:      #ffffff;
+
+  --color-primary:                #ffffff;
+  --color-primary-foreground:     #000000;
+
+  --color-secondary:              #1a1a1a;
+  --color-secondary-foreground:   #ffffff;
+
+  --color-card:                   #0a0a0a;
+  --color-card-foreground:        #ffffff;
+
+  --color-popover:                #0a0a0a;
+  --color-popover-foreground:     #ffffff;
+
+  --color-destructive:            #e5484d;
+  --color-destructive-foreground: #ffffff;
+
+  /* Inverted monochrome brand ramp — in dark mode the accent must be light,
+     otherwise brand-500 (#171717) text/buttons vanish into the background.
+     Pair light text on bg-brand-* with dark:text-black. */
+  --color-brand-25:  #0a0a0a;
+  --color-brand-50:  #111111;
+  --color-brand-100: #1a1a1a;
+  --color-brand-200: #2a2a2a;
+  --color-brand-300: #5a5a5a;
+  --color-brand-400: #a3a3a3;
+  --color-brand-500: #ededed;
+  --color-brand-600: #d6d6d6;
+  --color-brand-700: #c0c0c0;
+  --color-brand-800: #ababab;
+  --color-brand-900: #969696;
+  --color-brand-950: #ffffff;
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentColor);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  body {
+    @apply relative font-normal font-sans z-1 bg-background text-foreground;
+  }
+}
+
+@utility menu-item {
+  @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+}
+
+@utility menu-item-active {
+  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+}
+
+@utility menu-item-inactive {
+  @apply text-gray-700 hover:bg-gray-100 group-hover:text-gray-700 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
+}
+
+@utility menu-item-icon {
+  @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400;
+}
+
+@utility menu-item-icon-active {
+  @apply text-brand-500 dark:text-brand-400;
+}
+
+@utility menu-item-icon-size {
+  & svg {
+    @apply !size-6;
+  }
+}
+
+@utility menu-item-icon-inactive {
+  @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+}
+
+@utility menu-item-arrow {
+  @apply relative;
+}
+
+@utility menu-item-arrow-active {
+  @apply rotate-180 text-brand-500 dark:text-brand-400;
+}
+
+@utility menu-item-arrow-inactive {
+  @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+}
+
+@utility menu-dropdown-item {
+  @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium;
+}
+
+@utility menu-dropdown-item-active {
+  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+}
+
+@utility menu-dropdown-item-inactive {
+  @apply text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5;
+}
+
+@utility menu-dropdown-badge {
+  @apply block rounded-full px-2.5 py-0.5 text-xs font-medium uppercase text-brand-500 dark:text-brand-400;
+}
+
+@utility menu-dropdown-badge-active {
+  @apply bg-brand-100 dark:bg-brand-500/20;
+}
+
+@utility menu-dropdown-badge-inactive {
+  @apply bg-brand-50 group-hover:bg-brand-100 dark:bg-brand-500/15 dark:group-hover:bg-brand-500/20;
+}
+
+@utility header-item-icon-size {
+  & svg {
+    @apply !size-10;
+  }
+}
+
+@utility icon-2em { @apply !w-[2em] !h-[2em]; }
+@utility icon-1.5em { @apply !w-[1.25em] !h-[1.25em]; }
+@utility icon-1em { @apply !w-[1em] !h-[1em]; }
+
+@utility no-scrollbar {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    @apply size-1.5;
+  }
+  &::-webkit-scrollbar-track {
+    @apply rounded-full;
+  }
+  &::-webkit-scrollbar-thumb {
+    @apply bg-gray-200 rounded-full dark:bg-calcite-mid;
+  }
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #2e2e2e;
+}
+
+@layer utilities {
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="time"]::-webkit-inner-spin-button,
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+  }
+}
+
+/* Subtle entrance for the auth card (used via animate-[mv-rise_...]) */
+@keyframes mv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Per-step fade for the signup wizard (used via animate-[mv-fade_...]) */
+@keyframes mv-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Honor reduced-motion across the auth screens, matching the originals. */
+@media (prefers-reduced-motion: reduce) {
+  .mv-screen *,
+  .mv-screen *::before,
+  .mv-screen *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

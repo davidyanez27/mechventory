@@ -1,0 +1,58 @@
+name: CI
+
+# Runs on every pull request and on pushes to main. This workflow only tests
+# and builds the code — it never authenticates to AWS and deploys nothing.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# If new commits arrive on the same branch/PR, cancel the in-progress run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+
+    # Tests mock the DB and Cognito, so nothing real is contacted.
+    env:
+      DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+      API_BASE_URL: http://localhost:3000
+      COGNITO_USER_POOL_ID: us-east-1_cicicicic
+      INVOICES_BUCKET: ci-invoices-bucket
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (frontend)
+        run: pnpm --filter frontend lint
+
+      - name: Typecheck (api)
+        run: pnpm --filter api typecheck
+
+      - name: Test (all packages)
+        run: pnpm -r --if-present test
+
+      - name: Build API
+        run: pnpm --filter api build
+
+      - name: Build frontend
+        run: pnpm --filter frontend build

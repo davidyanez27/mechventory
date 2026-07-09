@@ -1,0 +1,11 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+allowBuilds:
+  # Prebuilt binary arrives via its optional platform package; the build
+  # script is only a from-source fallback.
+  '@swc/core': false
+  esbuild: true
+  lightningcss: true
+  unrs-resolver: false
