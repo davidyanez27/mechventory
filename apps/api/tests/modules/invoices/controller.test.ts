@@ -93,8 +93,7 @@ beforeEach(() => {
 describe('POST /invoices/create', () => {
   test('should compute all money server-side and never trust client totals', async () => {
     vi.mocked(repository.resolveCustomerId).mockResolvedValue(10);
-    vi.mocked(repository.create).mockResolvedValue(undefined);
-
+    vi.mocked(repository.create).mockResolvedValue(INVOICE_UUID);
     const response = await request(app).post('/invoices/create').send(createPayload);
 
     expect(response.status).toBe(201);

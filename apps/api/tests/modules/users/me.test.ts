@@ -75,7 +75,10 @@ describe('GET /users/me', () => {
   });
 
   test('should answer 404 when the user row is gone', async () => {
-    vi.mocked(repository.findSelf).mockResolvedValue(null);
+
+    vi.mocked(repository.findSelf).mockResolvedValue(
+      null as unknown as Awaited<ReturnType<typeof repository.findSelf>>,
+    );
 
     const response = await request(app).get('/users/me');
 
