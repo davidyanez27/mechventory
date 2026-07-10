@@ -16,3 +16,8 @@ output "api_endpoint" {
   description = "VITE_API_URL"
   value       = module.api_gateway.api_endpoint
 }
+
+output "amplify_branch_url" {
+  description = "Live URL of the deployed frontend (empty when Amplify is disabled)"
+  value       = var.github_repository != "" ? module.amplify[0].branch_url : ""
+}
