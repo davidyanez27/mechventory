@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from '@tanstack/react-router';
@@ -7,7 +8,7 @@ import { loginSchema  } from '@serveless/shared/auth';
 import type {LoginDto} from '@serveless/shared/auth';
 import { BRAND_NAME, Logo } from '@/UI/components/branding/Logo';
 import { useAuth } from '@/hooks';
-import { AuthBackdrop, GoogleMark } from '@/UI/components/auth';
+import { AuthBackdrop, ForgotPasswordCard, GoogleMark } from '@/UI/components/auth';
 import {
   mvScreen,
   mvCard,
@@ -23,6 +24,7 @@ import {
  * pixel-identical and in sync with the register screen.
  */
 export const LoginPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const {
     login,
@@ -35,13 +37,18 @@ export const LoginPage = () => {
 
   const [authError, setAuthError] = useState<string | null>(null);
 
+  // Forgot-password flow lives on its own screen; `notice` shows the success
+  // message back on the sign-in screen once the password has been reset.
+  const [showForgot, setShowForgot] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
   // Invited users sign in with the temporary password from their email;
   // Cognito then requires them to choose their own before issuing a session.
   const [needsNewPassword, setNeedsNewPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const {register, handleSubmit,formState: { errors }} = useForm<LoginDto>({
+  const {register, handleSubmit, getValues, setValue, formState: { errors }} = useForm<LoginDto>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
@@ -55,10 +62,10 @@ export const LoginPage = () => {
       } else if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
         setNeedsNewPassword(true);
       } else {
-        setAuthError('Additional verification is required to sign in.');
+        setAuthError(t('auth.login.additionalVerification'));
       }
     } catch (err) {
-      setAuthError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.');
+      setAuthError(err instanceof Error ? err.message : t('auth.login.genericError'));
     }
   };
 
@@ -66,11 +73,11 @@ export const LoginPage = () => {
     e.preventDefault();
     setAuthError(null);
     if (newPassword.length < 8) {
-      setAuthError('Password must be at least 8 characters.');
+      setAuthError(t('auth.login.newPassword.tooShort'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setAuthError('Passwords do not match.');
+      setAuthError(t('auth.login.newPassword.mismatch'));
       return;
     }
     try {
@@ -78,10 +85,10 @@ export const LoginPage = () => {
       if (isSignedIn) {
         await navigate({ to: '/dashboard' });
       } else {
-        setAuthError('Additional verification is required to sign in.');
+        setAuthError(t('auth.login.additionalVerification'));
       }
     } catch (err) {
-      setAuthError(err instanceof Error ? err.message : 'Unable to set the new password.');
+      setAuthError(err instanceof Error ? err.message : t('auth.login.newPassword.error'));
     }
   };
 
@@ -90,9 +97,26 @@ export const LoginPage = () => {
     try {
       await loginWithProvider(provider);
     } catch (err) {
-      setAuthError(err instanceof Error ? err.message : `Unable to continue with ${provider}.`);
+      setAuthError(
+        err instanceof Error ? err.message : t('auth.login.providerError', { provider }),
+      );
     }
   };
+
+  if (showForgot) {
+    return (
+      <ForgotPasswordCard
+        defaultEmail={getValues('email')}
+        onCancel={() => setShowForgot(false)}
+        onReset={(email) => {
+          setShowForgot(false);
+          setValue('email', email);
+          setAuthError(null);
+          setNotice(t('auth.forgot.successNotice'));
+        }}
+      />
+    );
+  }
 
   return (
     <div className={mvScreen}>
@@ -103,15 +127,17 @@ export const LoginPage = () => {
 
         {needsNewPassword ? (
           <>
-            <h1 className="mb-[7px] text-[22px] font-semibold tracking-[-0.02em]">Set a new password</h1>
+            <h1 className="mb-[7px] text-[22px] font-semibold tracking-[-0.02em]">
+              {t('auth.login.newPassword.title')}
+            </h1>
             <p className="mb-7 text-[13.5px] leading-relaxed text-mv-muted">
-              Your temporary password was accepted. Choose your own to finish signing in.
+              {t('auth.login.newPassword.subtitle')}
             </p>
 
             <form onSubmit={onSetNewPassword}>
               <div className="mb-[15px]">
                 <label htmlFor="mv-new-password" className={mvLabel}>
-                  New password
+                  {t('auth.login.newPassword.newLabel')}
                 </label>
                 <input
                   id="mv-new-password"
@@ -126,7 +152,7 @@ export const LoginPage = () => {
 
               <div className="mb-[15px]">
                 <label htmlFor="mv-confirm-password" className={mvLabel}>
-                  Confirm password
+                  {t('auth.login.newPassword.confirmLabel')}
                 </label>
                 <input
                   id="mv-confirm-password"
@@ -150,28 +176,41 @@ export const LoginPage = () => {
                 className={`${mvBtnPrimary} mt-[7px] w-full`}
                 disabled={isSettingNewPassword}
               >
-                {isSettingNewPassword ? 'Saving…' : 'Set password & sign in'}
+                {isSettingNewPassword
+                  ? t('auth.login.newPassword.submitting')
+                  : t('auth.login.newPassword.submit')}
               </button>
             </form>
           </>
         ) : (
           <>
-        <h1 className="mb-[7px] text-[22px] font-semibold tracking-[-0.02em]">Sign In</h1>
+        <h1 className="mb-[7px] text-[22px] font-semibold tracking-[-0.02em]">
+          {t('auth.login.title')}
+        </h1>
         <p className="mb-7 text-[13.5px] leading-relaxed text-mv-muted">
-          The best projects management app.
+          {t('auth.login.subtitle')}
         </p>
+
+        {notice && (
+          <p
+            className="mb-5 rounded-mv border border-mv-line-2 bg-mv-surface-2 px-3 py-2 text-[12.5px] text-mv-fg"
+            role="status"
+          >
+            {notice}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit(onSignIn)}>
           <div className="mb-[15px]">
             <label htmlFor="mv-email" className={mvLabel}>
-              Email
+              {t('auth.login.email')}
             </label>
             <input
               id="mv-email"
               className={mvInput}
               type="email"
               autoComplete="email"
-              placeholder="you@workshop.com"
+              placeholder={t('auth.login.emailPlaceholder')}
               {...register('email')}
             />
             {errors.email && <p className={mvError}>{errors.email.message}</p>}
@@ -180,18 +219,26 @@ export const LoginPage = () => {
           <div className="mb-[15px]">
             <div className="mb-2 flex items-baseline justify-between">
               <label htmlFor="mv-password" className="text-[13px] font-[450] text-mv-fg">
-                Password
+                {t('auth.login.password')}
               </label>
-              <a className="text-[12.5px] text-mv-muted transition-colors hover:text-mv-fg" href="#">
-                Forgot password?
-              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthError(null);
+                  setNotice(null);
+                  setShowForgot(true);
+                }}
+                className="text-[12.5px] text-mv-muted transition-colors hover:text-mv-fg"
+              >
+                {t('auth.login.forgotPassword')}
+              </button>
             </div>
             <input
               id="mv-password"
               className={mvInput}
               type="password"
               autoComplete="current-password"
-              placeholder="••••••••"
+              placeholder={t('auth.login.passwordPlaceholder')}
               {...register('password')}
             />
             {errors.password && <p className={mvError}>{errors.password.message}</p>}
@@ -204,12 +251,12 @@ export const LoginPage = () => {
           )}
 
           <button type="submit" className={`${mvBtnPrimary} mt-[7px] w-full`} disabled={isLoggingIn}>
-            {isLoggingIn ? 'Signing in…' : 'Sign In'}
+            {isLoggingIn ? t('auth.login.submitting') : t('auth.login.submit')}
           </button>
         </form>
 
         <div className="my-5 flex items-center gap-3.5 text-[11px] uppercase tracking-[0.08em] text-mv-muted-2 before:h-px before:flex-1 before:bg-mv-line-2 before:content-[''] after:h-px after:flex-1 after:bg-mv-line-2 after:content-['']">
-          or
+          {t('auth.login.or')}
         </div>
 
         <button
@@ -219,13 +266,13 @@ export const LoginPage = () => {
           disabled={isProviderLoading}
         >
           <GoogleMark />
-          {isProviderLoading ? 'Redirecting…' : 'Continue with Google'}
+          {isProviderLoading ? t('auth.login.redirecting') : t('auth.login.continueWithGoogle')}
         </button>
 
         <p className="mt-6 text-center text-[13px] text-mv-muted">
-          New to {BRAND_NAME}?{' '}
+          {t('auth.login.noAccountPrefix', { brand: BRAND_NAME })}{' '}
           <Link to="/register" className="text-mv-fg underline-offset-[3px] hover:underline">
-            Create an account
+            {t('auth.login.createAccount')}
           </Link>
         </p>
           </>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Logo } from '@/UI/components/branding/Logo';
 import { useAuth } from '@/hooks';
@@ -23,6 +24,7 @@ const emptyForm = { email: '', name: '', password: '', confirm: '' };
  * post-confirmation trigger — nothing company-related is collected here.
  */
 export const RegisterPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { signUpAccount, isSigningUp, loginWithProvider, isProviderLoading } = useAuth();
 
@@ -41,12 +43,12 @@ export const RegisterPage = () => {
   const stepValid = [emailValid, nameValid, passwordValid][step];
 
   // Inline field errors — only once the user has typed something.
-  const emailFieldError = form.email && !emailValid ? 'Please enter a valid email' : null;
-  const nameFieldError = form.name && !nameValid ? 'Please enter your full name' : null;
+  const emailFieldError = form.email && !emailValid ? t('auth.register.emailInvalid') : null;
+  const nameFieldError = form.name && !nameValid ? t('auth.register.nameInvalid') : null;
   const passwordFieldError =
-    form.password && form.password.length < 8 ? 'Use at least 8 characters' : null;
+    form.password && form.password.length < 8 ? t('auth.register.passwordTooShort') : null;
   const confirmFieldError =
-    form.confirm && form.password !== form.confirm ? 'Passwords do not match' : null;
+    form.confirm && form.password !== form.confirm ? t('auth.register.passwordMismatch') : null;
 
   const back = () => setStep((s) => Math.max(0, s - 1));
 
@@ -60,9 +62,7 @@ export const RegisterPage = () => {
       });
       setPhase('confirm');
     } catch (err) {
-      setSubmitError(
-        err instanceof Error ? err.message : 'Could not create your account. Please try again.',
-      );
+      setSubmitError(err instanceof Error ? err.message : t('auth.register.genericError'));
     }
   };
 
@@ -82,13 +82,17 @@ export const RegisterPage = () => {
     try {
       await loginWithProvider(provider);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : `Unable to continue with ${provider}.`);
+      setSubmitError(
+        err instanceof Error ? err.message : t('auth.register.providerError', { provider }),
+      );
     }
   };
 
   if (phase === 'confirm') {
+    // autoSignIn (see useAuth) means the account is signed in once the code is
+    // confirmed, so send them straight to the dashboard instead of back to login.
     return (
-      <ConfirmCodeCard email={form.email} onConfirmed={() => void navigate({ to: '/login' })} />
+      <ConfirmCodeCard email={form.email} onConfirmed={() => void navigate({ to: '/dashboard' })} />
     );
   }
 
@@ -102,12 +106,12 @@ export const RegisterPage = () => {
 
         <div className="text-center">
           <h1 className="mb-[7px] text-[23px] font-semibold tracking-[-0.02em]">
-            Create an account
+            {t('auth.register.title')}
           </h1>
           <p className="mb-[26px] text-[13.5px] text-mv-muted">
-            Already have an account?{' '}
+            {t('auth.register.haveAccountPrefix')}{' '}
             <Link to="/login" className="text-mv-fg underline-offset-[3px] hover:underline">
-              Sign in
+              {t('auth.register.signIn')}
             </Link>
           </p>
         </div>
@@ -119,14 +123,14 @@ export const RegisterPage = () => {
             <>
               <div className="mb-[15px]">
                 <label htmlFor="mv-email" className={mvLabel}>
-                  What&apos;s your email?
+                  {t('auth.register.emailQuestion')}
                 </label>
                 <input
                   id="mv-email"
                   className={mvInput}
                   type="email"
                   autoComplete="email"
-                  placeholder="you@workshop.com"
+                  placeholder={t('auth.register.emailPlaceholder')}
                   value={form.email}
                   onChange={set('email')}
                 />
@@ -135,12 +139,12 @@ export const RegisterPage = () => {
 
               <div className="mt-[18px] flex gap-2.5">
                 <button type="submit" className={`${mvBtnPrimary} flex-1`} disabled={!stepValid}>
-                  Next
+                  {t('auth.register.next')}
                 </button>
               </div>
 
               <div className="my-[22px] flex items-center gap-3.5 text-[11px] tracking-[0.08em] text-mv-muted-2 before:h-px before:flex-1 before:bg-mv-line-2 before:content-[''] after:h-px after:flex-1 after:bg-mv-line-2 after:content-['']">
-                OR
+                {t('auth.register.or')}
               </div>
 
               <button
@@ -150,7 +154,7 @@ export const RegisterPage = () => {
                 disabled={isProviderLoading}
               >
                 <GoogleMark />
-                {isProviderLoading ? 'Redirecting…' : `Sign up with Google`}
+                {isProviderLoading ? t('auth.register.redirecting') : t('auth.register.signUpWithGoogle')}
               </button>
             </>
           )}
@@ -159,28 +163,26 @@ export const RegisterPage = () => {
             <>
               <div className="mb-[15px]">
                 <label htmlFor="mv-name" className={mvLabel}>
-                  Full name
+                  {t('auth.register.fullName')}
                 </label>
                 <input
                   id="mv-name"
                   className={mvInput}
                   autoComplete="name"
-                  placeholder="Jordan Reyes"
+                  placeholder={t('auth.register.fullNamePlaceholder')}
                   value={form.name}
                   onChange={set('name')}
                 />
                 {nameFieldError && <p className={mvError}>{nameFieldError}</p>}
-                <p className={mvHint}>
-                  Your workspace is created automatically — you can rename it later in settings.
-                </p>
+                <p className={mvHint}>{t('auth.register.workspaceHint')}</p>
               </div>
 
               <div className="mt-[18px] flex gap-2.5">
                 <button type="button" className={`${mvBtnGhost} px-[18px]`} onClick={back}>
-                  Back
+                  {t('auth.register.back')}
                 </button>
                 <button type="submit" className={`${mvBtnPrimary} flex-1`} disabled={!stepValid}>
-                  Next
+                  {t('auth.register.next')}
                 </button>
               </div>
             </>
@@ -190,34 +192,34 @@ export const RegisterPage = () => {
             <>
               <div className="mb-[15px]">
                 <label htmlFor="mv-pass" className={mvLabel}>
-                  Create a password
+                  {t('auth.register.createPassword')}
                 </label>
                 <input
                   id="mv-pass"
                   className={mvInput}
                   type="password"
                   autoComplete="new-password"
-                  placeholder="••••••••"
+                  placeholder={t('auth.register.passwordPlaceholder')}
                   value={form.password}
                   onChange={set('password')}
                 />
                 {passwordFieldError ? (
                   <p className={mvError}>{passwordFieldError}</p>
                 ) : (
-                  <p className={mvHint}>Use at least 8 characters.</p>
+                  <p className={mvHint}>{t('auth.register.passwordHint')}</p>
                 )}
               </div>
 
               <div className="mb-[15px]">
                 <label htmlFor="mv-confirm" className={mvLabel}>
-                  Confirm password
+                  {t('auth.register.confirmPassword')}
                 </label>
                 <input
                   id="mv-confirm"
                   className={mvInput}
                   type="password"
                   autoComplete="new-password"
-                  placeholder="••••••••"
+                  placeholder={t('auth.register.passwordPlaceholder')}
                   value={form.confirm}
                   onChange={set('confirm')}
                 />
@@ -232,14 +234,14 @@ export const RegisterPage = () => {
 
               <div className="mt-[18px] flex gap-2.5">
                 <button type="button" className={`${mvBtnGhost} px-[18px]`} onClick={back}>
-                  Back
+                  {t('auth.register.back')}
                 </button>
                 <button
                   type="submit"
                   className={`${mvBtnPrimary} flex-1`}
                   disabled={!stepValid || isSigningUp}
                 >
-                  {isSigningUp ? 'Creating…' : 'Create account'}
+                  {isSigningUp ? t('auth.register.submitting') : t('auth.register.submit')}
                 </button>
               </div>
             </>

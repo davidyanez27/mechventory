@@ -6,7 +6,10 @@ import {
   signOut,
   signUp,
   confirmSignUp,
+  autoSignIn,
   resendSignUpCode,
+  resetPassword,
+  confirmResetPassword,
   getCurrentUser,
   fetchUserAttributes,
 } from 'aws-amplify/auth';
@@ -96,18 +99,46 @@ export const useAuth = () => {
       signUp({
         username: email,
         password,
-        options: { userAttributes: { email, name } },
+        // autoSignIn lets confirmSignUp finish with a real session, so the user
+        // reaches the dashboard straight after entering the code — no second login.
+        options: { userAttributes: { email, name }, autoSignIn: true },
       }),
   });
 
-  // Cognito creates the user as UNCONFIRMED and emails a code; this verifies it.
+  // Cognito creates the user as UNCONFIRMED and emails a code; this verifies it
+  // and then completes the pending autoSignIn so a session exists. Invalidating
+  // ['auth'] refetches the session/profile queries the redirect relies on.
   const confirmMutation = useMutation({
-    mutationFn: ({ email, code }: { email: string; code: string }) =>
-      confirmSignUp({ username: email, confirmationCode: code }),
+    mutationFn: async ({ email, code }: { email: string; code: string }) => {
+      const { nextStep } = await confirmSignUp({ username: email, confirmationCode: code });
+      if (nextStep.signUpStep === 'COMPLETE_AUTO_SIGN_IN') {
+        await autoSignIn();
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['auth'] }),
   });
 
   const resendCodeMutation = useMutation({
     mutationFn: (email: string) => resendSignUpCode({ username: email }),
+  });
+
+  // Forgot-password, step 1: Cognito emails a reset code. Returns the nextStep
+  // so the UI knows whether a code is required (it normally is).
+  const resetPasswordMutation = useMutation({
+    mutationFn: (email: string) => resetPassword({ username: email }),
+  });
+
+  // Forgot-password, step 2: verify the emailed code and set the new password.
+  const confirmResetMutation = useMutation({
+    mutationFn: ({
+      email,
+      code,
+      newPassword,
+    }: {
+      email: string;
+      code: string;
+      newPassword: string;
+    }) => confirmResetPassword({ username: email, confirmationCode: code, newPassword }),
   });
 
   const logoutMutation = useMutation({
@@ -145,6 +176,12 @@ export const useAuth = () => {
     isConfirming: confirmMutation.isPending,
 
     resendCode: resendCodeMutation.mutateAsync,
+
+    requestPasswordReset: resetPasswordMutation.mutateAsync,
+    isRequestingReset: resetPasswordMutation.isPending,
+
+    confirmPasswordReset: confirmResetMutation.mutateAsync,
+    isConfirmingReset: confirmResetMutation.isPending,
 
     logout: logoutMutation.mutateAsync,
     isLoggingOut: logoutMutation.isPending,

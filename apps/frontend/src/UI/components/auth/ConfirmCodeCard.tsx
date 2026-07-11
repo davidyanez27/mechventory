@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { Logo } from '@/UI/components/branding/Logo';
 import { useAuth } from '@/hooks';
 import { mvScreen, mvCard, mvLabel, mvInput, mvError, mvBtnPrimary } from '@/UI/data';
@@ -16,6 +17,7 @@ export const ConfirmCodeCard = ({
   email: string;
   onConfirmed: () => void;
 }) => {
+  const { t } = useTranslation();
   const { confirmRegister, isConfirming, resendCode } = useAuth();
 
   const [code, setCode] = useState('');
@@ -29,9 +31,7 @@ export const ConfirmCodeCard = ({
       await confirmRegister({ email, code: code.trim() });
       onConfirmed();
     } catch (err) {
-      setConfirmError(
-        err instanceof Error ? err.message : 'That code did not work. Please try again.',
-      );
+      setConfirmError(err instanceof Error ? err.message : t('auth.confirm.codeError'));
     }
   };
 
@@ -40,7 +40,7 @@ export const ConfirmCodeCard = ({
     try {
       await resendCode(email);
     } catch (err) {
-      setConfirmError(err instanceof Error ? err.message : 'Could not resend the code.');
+      setConfirmError(err instanceof Error ? err.message : t('auth.confirm.resendError'));
     }
   };
 
@@ -51,15 +51,21 @@ export const ConfirmCodeCard = ({
         className={`${mvCard} w-full max-w-[440px] px-9 pt-[34px] pb-7 text-center max-[520px]:px-[22px] max-[520px]:pt-7 max-[520px]:pb-[22px]`}
       >
         <Logo size={20} className="mb-[22px] justify-center" />
-        <h1 className="mb-[7px] text-[23px] font-semibold tracking-[-0.02em]">Check your email</h1>
+        <h1 className="mb-[7px] text-[23px] font-semibold tracking-[-0.02em]">
+          {t('auth.confirm.title')}
+        </h1>
         <p className="mb-7 text-[13.5px] text-mv-muted">
-          Enter the 6-digit code we sent to <span className="text-mv-fg">{email}</span>.
+          <Trans
+            i18nKey="auth.confirm.subtitle"
+            values={{ email }}
+            components={{ em: <span className="text-mv-fg" /> }}
+          />
         </p>
 
         <form onSubmit={onConfirm} className="text-left">
           <div className="mb-[15px]">
             <label htmlFor="mv-code" className={mvLabel}>
-              Verification code
+              {t('auth.confirm.codeLabel')}
             </label>
             <input
               id="mv-code"
@@ -83,18 +89,18 @@ export const ConfirmCodeCard = ({
             className={`${mvBtnPrimary} mt-[7px] w-full`}
             disabled={isConfirming || !code.trim()}
           >
-            {isConfirming ? 'Verifying…' : 'Confirm account'}
+            {isConfirming ? t('auth.confirm.submitting') : t('auth.confirm.submit')}
           </button>
         </form>
 
         <p className="mt-6 text-[13px] text-mv-muted">
-          Didn&apos;t get it?{' '}
+          {t('auth.confirm.resendPrefix')}{' '}
           <button
             type="button"
             onClick={onResend}
             className="text-mv-fg underline-offset-[3px] hover:underline"
           >
-            Resend code
+            {t('auth.confirm.resend')}
           </button>
         </p>
       </main>

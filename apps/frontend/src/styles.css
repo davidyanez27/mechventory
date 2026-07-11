@@ -54,15 +54,16 @@ layer(base);
   --font-sans: "Geist", sans-serif;
 
   /* ─── Mechventory auth design system (shared by /login + /signup) ─────────── */
-  /* Fixed, theme-independent tokens so the dark screens stay pixel-exact.       */
-  --color-mv-bg:        #000000;
-  --color-mv-surface:   #0a0a0a;
-  --color-mv-surface-2: #0c0c0c;
-  --color-mv-line:      #1c1c1c;
-  --color-mv-line-2:    #2e2e2e;
-  --color-mv-fg:        #ededed;
-  --color-mv-muted:     #8f8f8f;
-  --color-mv-muted-2:   #5a5a5a;
+  /* Light-mode defaults; the .dark block below flips every token so the auth    */
+  /* screens follow the theme toggle instead of being permanently dark.          */
+  --color-mv-bg:        #f7f7f8;
+  --color-mv-surface:   #ffffff;
+  --color-mv-surface-2: #f4f4f5;
+  --color-mv-line:      #eaeaea;
+  --color-mv-line-2:    #e2e2e4;
+  --color-mv-fg:        #171717;
+  --color-mv-muted:     #6b6b6b;
+  --color-mv-muted-2:   #9a9a9a;
 
   --radius-mv:      7px;
   --radius-mv-card: 12px;
@@ -231,6 +232,22 @@ layer(base);
   --z-index-999999: 999999;
 }
 
+/* ─── Auth blueprint backdrop (AuthBackdrop.tsx) — light-mode defaults ────────
+   Plain CSS vars (not @theme tokens) because they are consumed via var() in the
+   component's inline styles / SVG strokes, not as Tailwind utilities. Declared
+   before .dark so the .dark block below overrides them when the theme is dark. */
+:root {
+  --mv-grid-fine:     #ececee;
+  --mv-grid-coarse:   #e4e4e7;
+  --mv-draw-strong:   #dcdce0;
+  --mv-draw-soft:     #e6e6ea;
+  --mv-draw-line:     #d4d4d8;
+  --mv-draw-text:     #c8c8cd;
+  --mv-glow:          rgba(0, 0, 0, 0.03);
+  --mv-vignette-mid:  rgba(0, 0, 0, 0.02);
+  --mv-vignette-edge: rgba(0, 0, 0, 0.06);
+}
+
 /* ─── Dark mode overrides ────────────────────────────────────────────────────
    MUST be outside any @layer so these non-layered rules beat the non-layered
    :root{} output produced by @theme above (same cascade level, later in file
@@ -279,6 +296,27 @@ layer(base);
   --color-brand-800: #ababab;
   --color-brand-900: #969696;
   --color-brand-950: #ffffff;
+
+  /* Auth design-system tokens — dark palette (the original pixel-exact values) */
+  --color-mv-bg:        #000000;
+  --color-mv-surface:   #0a0a0a;
+  --color-mv-surface-2: #0c0c0c;
+  --color-mv-line:      #1c1c1c;
+  --color-mv-line-2:    #2e2e2e;
+  --color-mv-fg:        #ededed;
+  --color-mv-muted:     #8f8f8f;
+  --color-mv-muted-2:   #5a5a5a;
+
+  /* Auth blueprint backdrop — dark palette */
+  --mv-grid-fine:     #1c1c1c;
+  --mv-grid-coarse:   #161616;
+  --mv-draw-strong:   #262626;
+  --mv-draw-soft:     #1f1f1f;
+  --mv-draw-line:     #2e2e2e;
+  --mv-draw-text:     #3a3a3a;
+  --mv-glow:          rgba(255, 255, 255, 0.045);
+  --mv-vignette-mid:  rgba(0, 0, 0, 0.55);
+  --mv-vignette-edge: rgba(0, 0, 0, 0.92);
 }
 
 @layer base {
