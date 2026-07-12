@@ -1,18 +1,16 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { Hub } from 'aws-amplify/utils'
 import { getCurrentUser } from 'aws-amplify/auth'
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
-    // A Hosted-UI (Google) login returns to `/?code=...`. Amplify needs a beat to
-    // exchange that code for a session, so while a code is present we DON'T redirect
-    // — the component waits for the exchange to finish, then routes into the app.
-    // Redirecting here (on a not-yet-established session) is what stranded users on
-    // a blank page.
+    // Hosted-UI (Google) returns to `/?code=...`; Amplify exchanges that code for
+    // a session in the background. Redirecting here — or in the component before
+    // the exchange finishes — cancels it and strands the user on a blank page. So
+    // while a code is present we don't redirect; the component waits for the
+    // session to appear.
     if (new URLSearchParams(window.location.search).has('code')) return
 
-    // Normal visit to `/`: bounce straight to the right place.
     const signedIn = await getCurrentUser().then(
       () => true,
       () => false,
@@ -22,24 +20,37 @@ export const Route = createFileRoute('/')({
   component: OAuthLanding,
 })
 
-// Reached for the OAuth callback (`/?code=...`). Amplify processes the code in the
-// background and fires a `signedIn` Hub event when the session exists; we wait for
-// that (or a failure) instead of rendering a blank page.
+// Reached for the OAuth callback (`/?code=...`). Poll for the session Amplify is
+// establishing in the background rather than deciding once and navigating away
+// early — leaving the page is what was cancelling the code→token exchange.
 function OAuthLanding() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const toDashboard = () => navigate({ to: '/dashboard', replace: true })
-    const toLogin = () => navigate({ to: '/login', replace: true })
+    let cancelled = false
+    let tries = 0
 
-    // Amplify may have already finished exchanging the code before we mounted.
-    getCurrentUser().then(toDashboard, () => {})
+    const poll = async () => {
+      const signedIn = await getCurrentUser().then(
+        () => true,
+        () => false,
+      )
+      if (cancelled) return
+      if (signedIn) {
+        navigate({ to: '/dashboard', replace: true })
+      } else if (tries++ > 25) {
+        // ~5s guard: exchange never completed, fall back to the login screen.
+        navigate({ to: '/login', replace: true })
+      } else {
+        setTimeout(poll, 200)
+      }
+    }
 
-    const stop = Hub.listen('auth', ({ payload }) => {
-      if (payload.event === 'signedIn') toDashboard()
-      else if (payload.event === 'signInWithRedirect_failure') toLogin()
-    })
-    return stop
+    void poll()
+
+    return () => {
+      cancelled = true
+    }
   }, [navigate])
 
   return null
