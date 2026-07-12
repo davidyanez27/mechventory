@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
@@ -36,6 +36,16 @@ export const LoginPage = () => {
   } = useAuth();
 
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // A failed Google/Hosted-UI sign-in bounces back here with the reason stashed by
+  // the OAuth landing (see routes/index.tsx). Show it once, then clear it.
+  useEffect(() => {
+    const oauthError = sessionStorage.getItem('oauth_error');
+    if (oauthError) {
+      sessionStorage.removeItem('oauth_error');
+      setAuthError(oauthError);
+    }
+  }, []);
 
   // Forgot-password flow lives on its own screen; `notice` shows the success
   // message back on the sign-in screen once the password has been reset.

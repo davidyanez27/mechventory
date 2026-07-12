@@ -17,6 +17,7 @@ Serverless monorepo using pnpm workspaces, deploying to AWS Lambda.
 
 - `pnpm dev` — Start all apps in dev mode
 - `pnpm --filter frontend dev` / `build` / `lint` — Frontend dev server (port 5173) / build / lint
+- `pnpm --filter frontend format` / `check` — Prettier `--check` / auto-fix (`prettier --write` + `eslint --fix`); the frontend has no standalone `typecheck` script — `build` is the type-check path
 - `pnpm --filter api typecheck` — Typecheck the API
 - `pnpm --filter api package` — Build the API and zip `lambda.zip` for deployment
 - `pnpm --filter api db:generate` / `db:migrate` / `db:push` / `db:studio` — Drizzle migrations (point `DATABASE_URL` at the **direct**, non-pooled Neon endpoint)
