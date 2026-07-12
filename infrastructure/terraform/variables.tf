@@ -38,6 +38,25 @@ variable "frontend_branch" {
   default     = "main"
 }
 
+variable "google_client_id" {
+  description = "Google OAuth 2.0 client ID for Cognito federated sign-in. Leave empty to disable Google sign-in. Not secret (ships in the client), but pairs with google_client_secret."
+  type        = string
+  default     = ""
+}
+
+variable "google_client_secret" {
+  description = "Google OAuth 2.0 client secret. Pass via TF_VAR_google_client_secret; never commit. Only used when google_client_id is set."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "hosted_ui_domain_prefix" {
+  description = "Globally-unique prefix for the Cognito Hosted UI domain (e.g. mechventory-dev). Required when google_client_id is set."
+  type        = string
+  default     = ""
+}
+
 variable "api_lambda_zip_path" {
   description = "Override path to the built apps/api Lambda zip. When null, defaults to apps/api/lambda.zip resolved from the repo root (run `pnpm --filter api package` first)."
   type        = string

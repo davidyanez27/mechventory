@@ -26,6 +26,50 @@ resource "aws_cognito_user_pool" "this" {
   }
 }
 
+locals {
+  google_enabled = var.google_client_id != ""
+  # Only advertise Google on the client once the IdP actually exists.
+  identity_providers = local.google_enabled ? ["COGNITO", "Google"] : ["COGNITO"]
+}
+
+# Hosted UI domain — the OAuth redirect endpoint Google bounces through
+# (https://<prefix>.auth.<region>.amazoncognito.com/oauth2/idpresponse).
+# Only needed for federated sign-in, so it is gated on Google being configured.
+resource "aws_cognito_user_pool_domain" "this" {
+  count        = local.google_enabled ? 1 : 0
+  domain       = var.hosted_ui_domain_prefix
+  user_pool_id = aws_cognito_user_pool.this.id
+
+  lifecycle {
+    precondition {
+      condition     = var.hosted_ui_domain_prefix != ""
+      error_message = "hosted_ui_domain_prefix must be set when google_client_id is provided — it becomes the Hosted UI domain <prefix>.auth.<region>.amazoncognito.com."
+    }
+  }
+}
+
+# Google as a federated identity provider. Attribute mapping copies Google's
+# email/name onto the Cognito user so the ID token carries them (the API's lazy
+# provisioning reads name+email from those claims).
+resource "aws_cognito_identity_provider" "google" {
+  count         = local.google_enabled ? 1 : 0
+  user_pool_id  = aws_cognito_user_pool.this.id
+  provider_name = "Google"
+  provider_type = "Google"
+
+  provider_details = {
+    client_id        = var.google_client_id
+    client_secret    = var.google_client_secret
+    authorize_scopes = "openid email profile"
+  }
+
+  attribute_mapping = {
+    email    = "email"
+    name     = "name"
+    username = "sub"
+  }
+}
+
 resource "aws_cognito_user_pool_client" "this" {
   name                                 = var.user_pool_client_name
   user_pool_id                         = aws_cognito_user_pool.this.id
@@ -43,7 +87,10 @@ resource "aws_cognito_user_pool_client" "this" {
   callback_urls = var.callback_urls
   logout_urls   = var.logout_urls
 
-  supported_identity_providers  = ["COGNITO"]
+  # Google must exist before the client can list it as a supported provider.
+  supported_identity_providers  = local.identity_providers
   refresh_token_validity        = 30
   prevent_user_existence_errors = "ENABLED"
+
+  depends_on = [aws_cognito_identity_provider.google]
 }

@@ -37,6 +37,15 @@ resource "aws_amplify_app" "this" {
     target = "/index.html"
     status = "200"
   }
+
+  lifecycle {
+    # access_token is a write-only GitHub credential AWS never returns and that
+    # is only needed to first connect the repo + register the webhook. Ignore it
+    # after creation so routine applies neither require it re-exported nor try to
+    # overwrite it with an empty value. To rotate the token, temporarily remove
+    # this and re-apply with TF_VAR_github_access_token set.
+    ignore_changes = [access_token]
+  }
 }
 
 resource "aws_amplify_branch" "this" {

@@ -82,6 +82,10 @@ module "cognito" {
   callback_urls                = var.frontend_urls
   logout_urls                  = var.frontend_urls
   post_confirmation_lambda_arn = aws_lambda_function.post_confirmation.arn
+  aws_region                   = var.aws_region
+  google_client_id             = var.google_client_id
+  google_client_secret         = var.google_client_secret
+  hosted_ui_domain_prefix      = var.hosted_ui_domain_prefix
 }
 
 locals {
@@ -145,5 +149,9 @@ module "amplify" {
     VITE_API_URL              = module.api_gateway.api_endpoint
     VITE_COGNITO_USER_POOL_ID = module.cognito.user_pool_id
     VITE_COGNITO_CLIENT_ID    = module.cognito.client_id
+    # OAuth / Google Hosted UI (empty string when Google sign-in is disabled).
+    VITE_COGNITO_DOMAIN            = module.cognito.hosted_ui_domain
+    VITE_COGNITO_REDIRECT_SIGN_IN  = join(",", var.frontend_urls)
+    VITE_COGNITO_REDIRECT_SIGN_OUT = join(",", var.frontend_urls)
   }
 }

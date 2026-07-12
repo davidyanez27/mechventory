@@ -11,7 +11,7 @@ import {
   resetPassword,
   confirmResetPassword,
   getCurrentUser,
-  fetchUserAttributes,
+  fetchAuthSession,
 } from 'aws-amplify/auth';
 import type { AuthProvider, AuthStatus, AuthUser, LoginDto, SignUpInput } from '@serveless/shared/auth';
 import type { Company } from '@serveless/shared/company';
@@ -23,13 +23,18 @@ const meKey = ['auth', 'me'] as const;
 const companyKey = ['auth', 'company'] as const;
 const authTime = 1000 * 60 * 15; // 15 min
 
-// Source of truth for the session: returns the Cognito identity, or null when
-// there is no active session. React Query caches and re-validates it.
+
 const fetchSession = async (): Promise<AuthUser | null> => {
   try {
     const { username, userId } = await getCurrentUser();
-    const attrs = await fetchUserAttributes();
-    return { username, sub: userId, email: attrs.email, name: attrs.name };
+    const { tokens } = await fetchAuthSession();
+    const claims = tokens?.idToken?.payload;
+    return {
+      username,
+      sub: userId,
+      email: claims?.email as string | undefined,
+      name: claims?.name as string | undefined,
+    };
   } catch {
     return null;
   }
@@ -75,39 +80,25 @@ export const useAuth = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['auth'] }),
   });
 
-  // Second half of an invited user's first sign-in: Cognito created them with
-  // a temporary password (FORCE_CHANGE_PASSWORD), so signIn answers with the
-  // NEW_PASSWORD_REQUIRED step and this call completes it.
   const newPasswordMutation = useMutation({
     mutationFn: (newPassword: string) => confirmSignIn({ challengeResponse: newPassword }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['auth'] }),
   });
 
-  // Federated sign-in. Redirects to the Cognito Hosted UI / provider consent
-  // screen; requires a Hosted UI domain + the provider's IdP configured in
-  // Cognito. TODO(infra): add the Hosted UI domain + Google IdP in Terraform.
   const providerMutation = useMutation({
     mutationFn: (provider: AuthProvider) => signInWithRedirect({ provider }),
   });
 
-  // Account creation for the /register wizard. The company workspace is a
-  // backend concept: the post-confirmation trigger creates it (unique name)
-  // and it can be renamed via the API — nothing company-related goes to
-  // Cognito.
   const signupMutation = useMutation({
     mutationFn: ({ email, password, name }: SignUpInput) =>
       signUp({
         username: email,
         password,
-        // autoSignIn lets confirmSignUp finish with a real session, so the user
-        // reaches the dashboard straight after entering the code — no second login.
         options: { userAttributes: { email, name }, autoSignIn: true },
       }),
   });
 
-  // Cognito creates the user as UNCONFIRMED and emails a code; this verifies it
-  // and then completes the pending autoSignIn so a session exists. Invalidating
-  // ['auth'] refetches the session/profile queries the redirect relies on.
+
   const confirmMutation = useMutation({
     mutationFn: async ({ email, code }: { email: string; code: string }) => {
       const { nextStep } = await confirmSignUp({ username: email, confirmationCode: code });
@@ -122,13 +113,10 @@ export const useAuth = () => {
     mutationFn: (email: string) => resendSignUpCode({ username: email }),
   });
 
-  // Forgot-password, step 1: Cognito emails a reset code. Returns the nextStep
-  // so the UI knows whether a code is required (it normally is).
   const resetPasswordMutation = useMutation({
     mutationFn: (email: string) => resetPassword({ username: email }),
   });
 
-  // Forgot-password, step 2: verify the emailed code and set the new password.
   const confirmResetMutation = useMutation({
     mutationFn: ({
       email,

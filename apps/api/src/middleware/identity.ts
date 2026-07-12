@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { companies, companyMembers, users } from '../db/schema/index.js';
 import type { CompanyRole } from '../db/schema/index.js';
+import { provisionWorkspace } from '../lib/provisioning.js';
 
 // Same shape Backend-main's AuthMiddleware attached to `req`, minus `appRole`
 // (app-level roles are Cognito groups now).
@@ -25,7 +26,7 @@ declare global {
   }
 }
 
-type JwtClaims = { sub?: string; email?: string };
+type JwtClaims = { sub?: string; email?: string; name?: string };
 
 // The Cognito JWT authorizer already validated the token; API Gateway passes
 // the verified claims through the Lambda event.
@@ -82,10 +83,25 @@ export const identityMiddleware = async (req: Request, res: Response, next: Next
   // gets its 2xx (API Gateway adds the CORS headers to the response).
   if (req.method === 'OPTIONS') return res.sendStatus(204);
 
-  const { sub } = getClaims();
+  const claims = getClaims();
+  const { sub } = claims;
   if (!sub) return res.status(401).json({ error: 'Missing authentication token' });
 
-  const identity = await resolveIdentity(sub);
+  let identity = await resolveIdentity(sub);
+
+  // A federated (Google) user's first request has no DB rows yet — the
+  // post-confirmation trigger only runs for native signups. Provision the
+  // workspace on demand from the ID-token claims, then resolve again.
+  if (!identity && claims.email) {
+    try {
+      await provisionWorkspace({ sub, email: claims.email, fullName: claims.name ?? claims.email });
+    } catch {
+      // A concurrent first request may have provisioned already (unique-constraint
+      // race) — ignore and let the re-resolve below pick up the rows.
+    }
+    identity = await resolveIdentity(sub);
+  }
+
   if (!identity) {
     return res.status(403).json({ error: 'User does not belong to an active company' });
   }
